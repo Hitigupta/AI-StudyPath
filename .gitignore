@@ -1,0 +1,23 @@
+
+# Secrets
+.env
+**/.env
+
+# Python generated files
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Editor and OS files
+.vscode/
+.DS_Store
+
+*.db-journal
+*.sqlite-journal

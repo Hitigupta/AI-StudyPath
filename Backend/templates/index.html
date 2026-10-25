@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI StudyPath</title>
+  <meta name="description" content="AI StudyPath finds your knowledge gaps and tells you what to study next.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#F3F7FC">
+  <script>
+    /* Apply the saved theme before first paint to avoid a flash. */
+    (function () {
+      var theme = null;
+      try { theme = localStorage.getItem("studypath-theme"); } catch (e) { theme = null; }
+      if (theme !== "light" && theme !== "dark") {
+        theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+ 
+  <!-- Icon sprite (stroke icons, inherit colour from CSS) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-logo" viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5"/></symbol>
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-6h4v6"/></symbol>
+      <symbol id="i-quiz" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></symbol>
+      <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+      <symbol id="i-mistake" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/></symbol>
+      <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 21.5h4"/><path d="M12 2.5a6.5 6.5 0 00-3.7 11.8c.5.4.7 1 .7 1.7v0h6v0c0-.7.2-1.3.7-1.7A6.5 6.5 0 0012 2.5z"/></symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></symbol>
+      <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></symbol>
+      <symbol id="i-chevrons-left" viewBox="0 0 24 24"><path d="M11 17l-5-5 5-5"/><path d="M18 17l-5-5 5-5"/></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+      <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 6.1A10.6 10.6 0 0112 6c6.4 0 10 6 10 6a17 17 0 01-3.2 3.9"/><path d="M6.5 6.9C3.7 8.6 2 12 2 12s3.6 6 10 6c1.5 0 2.8-.3 4-.8"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9L2.4 17.5A2 2 0 004.1 20.5h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9.5v4"/><path d="M12 17h.01"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.5h.01"/></symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-3-6.7"/><path d="M21 4v5h-5"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></symbol>
+      <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 004 21.5z"/><path d="M4 19V5.5"/></symbol>
+    </defs>
+  </svg>
+ 
+  <!-- Initial session check -->
+  <div id="boot" class="boot" role="status" aria-live="polite">
+    <span class="spinner spinner-lg" aria-hidden="true"></span>
+    <span class="sr-only">Loading AI StudyPath</span>
+  </div>
+ 
+  <!-- ============ Authentication ============ -->
+  <section id="auth-screen" class="auth" hidden>
+    <aside class="auth-brand">
+      <div class="brand">
+        <span class="brand-mark"><svg class="icon" width="22" height="22" aria-hidden="true"><use href="#i-logo"/></svg></span>
+        <span class="brand-name">StudyPath</span>
+      </div>
+      <div class="auth-brand-copy">
+        <p class="eyebrow eyebrow-on-dark">AI-powered learning</p>
+        <h2>Know exactly what to study next.</h2>
+        <ul class="auth-points">
+          <li><svg class="icon" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg>Practice quizzes generated for any topic you choose</li>
+          <li><svg class="icon" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg>Concept-level knowledge gap detection from your real answers</li>
+          <li><svg class="icon" width="18" height="18" aria-hidden="true"><use href="#i-check"/></svg>Mistake review and a personalised next-study recommendation</li>
+        </ul>
+      </div>
+    </aside>
+ 
+    <div class="auth-main">
+      <div class="auth-top">
+        <button type="button" class="icon-btn" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme">
+          <svg class="icon icon-sun" width="20" height="20" aria-hidden="true"><use href="#i-sun"/></svg>
+          <svg class="icon icon-moon" width="20" height="20" aria-hidden="true"><use href="#i-moon"/></svg>
+        </button>
+      </div>
+ 
+      <div class="auth-card">
+        <!-- Sign in -->
+        <div id="login-panel">
+          <h1 class="auth-title">Welcome back</h1>
+          <p class="auth-sub">Sign in to continue your learning.</p>
+          <form id="login-form" novalidate>
+            <div id="login-form-error" class="form-alert" role="alert" hidden></div>
+ 
+            <div class="field">
+              <label for="login-identifier">Username or email</label>
+              <input id="login-identifier" name="username_or_email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+              <p class="field-error" id="login-identifier-error" hidden></p>
+            </div>
+ 
+            <div class="field">
+              <label for="login-password">Password</label>
+              <div class="input-group">
+                <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+                <button type="button" class="input-action" data-toggle-password="login-password" aria-label="Show password" aria-pressed="false">
+                  <svg class="icon icon-eye" width="18" height="18" aria-hidden="true"><use href="#i-eye"/></svg>
+                  <svg class="icon icon-eye-off" width="18" height="18" aria-hidden="true"><use href="#i-eye-off"/></svg>
+                </button>
+              </div>
+              <p class="field-error" id="login-password-error" hidden></p>
+            </div>
+ 
+            <button class="btn btn-primary btn-block btn-lg" id="login-submit" type="submit"><span class="btn-label">Sign in</span></button>
+          </form>
+          <p class="auth-switch">New to StudyPath? <button type="button" class="link-btn" data-auth-mode="register">Create an account</button></p>
+        </div>
+ 
+        <!-- Register -->
+        <div id="register-panel" hidden>
+          <h1 class="auth-title">Create your account</h1>
+          <p class="auth-sub">Start tracking your progress in a minute.</p>
+          <form id="register-form" novalidate>
+            <div id="register-form-error" class="form-alert" role="alert" hidden></div>
+ 
+            <div class="field">
+              <label for="reg-username">Username</label>
+              <input id="reg-username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="50" required>
+              <p class="field-error" id="reg-username-error" hidden></p>
+            </div>
+ 
+            <div class="field">
+              <label for="reg-email">Email</label>
+              <input id="reg-email" name="email" type="email" autocomplete="email" maxlength="254" required>
+              <p class="field-error" id="reg-email-error" hidden></p>
+            </div>
+ 
+            <div class="field">
+              <label for="reg-password">Password</label>
+              <div class="input-group">
+                <input id="reg-password" name="password" type="password" autocomplete="new-password" aria-describedby="reg-password-hint" required>
+                <button type="button" class="input-action" data-toggle-password="reg-password" aria-label="Show password" aria-pressed="false">
+                  <svg class="icon icon-eye" width="18" height="18" aria-hidden="true"><use href="#i-eye"/></svg>
+                  <svg class="icon icon-eye-off" width="18" height="18" aria-hidden="true"><use href="#i-eye-off"/></svg>
+                </button>
+              </div>
+              <p class="field-hint" id="reg-password-hint">At least 8 characters.</p>
+              <p class="field-error" id="reg-password-error" hidden></p>
+            </div>
+ 
+            <div class="field">
+              <label for="reg-confirm">Confirm password</label>
+              <div class="input-group">
+                <input id="reg-confirm" name="confirm" type="password" autocomplete="new-password" required>
+                <button type="button" class="input-action" data-toggle-password="reg-confirm" aria-label="Show password" aria-pressed="false">
+                  <svg class="icon icon-eye" width="18" height="18" aria-hidden="true"><use href="#i-eye"/></svg>
+                  <svg class="icon icon-eye-off" width="18" height="18" aria-hidden="true"><use href="#i-eye-off"/></svg>
+                </button>
+              </div>
+              <p class="field-error" id="reg-confirm-error" hidden></p>
+            </div>
+ 
+            <button class="btn btn-primary btn-block btn-lg" id="register-submit" type="submit"><span class="btn-label">Create account</span></button>
+          </form>
+          <p class="auth-switch">Already have an account? <button type="button" class="link-btn" data-auth-mode="login">Sign in</button></p>
+        </div>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- ============ Application shell ============ -->
+  <div id="app-shell" class="shell" hidden>
+    <aside id="sidebar" class="sidebar" aria-label="Primary">
+      <div class="sidebar-head">
+        <div class="brand">
+          <span class="brand-mark"><svg class="icon" width="22" height="22" aria-hidden="true"><use href="#i-logo"/></svg></span>
+          <span class="brand-name nav-label">StudyPath</span>
+        </div>
+        <button type="button" class="icon-btn sidebar-close" id="drawer-close" aria-label="Close navigation">
+          <svg class="icon" width="20" height="20" aria-hidden="true"><use href="#i-x"/></svg>
+        </button>
+      </div>
+ 
+      <nav class="nav" aria-label="Main">
+        <a class="nav-link" href="#/dashboard" data-route="dashboard" title="Overview"><svg class="icon" width="20" height="20" aria-hidden="true"><use href="#i-home"/></svg><span class="nav-label">Overview</span></a>
+        <a class="nav-link" href="#/quiz" data-route="quiz" title="Practice quiz"><svg class="icon" width="20" height="20" aria-hidden="true"><use href="#i-quiz"/></svg><span class="nav-label">Practice quiz</span></a>
+        <a class="nav-link" href="#/progress" data-route="progress" title="Progress"><svg class="icon" width="20" height="20" aria-hidden="true"><use href="#i-chart"/></svg><span class="nav-label">Progress</span></a>
+        <a class="nav-link" href="#/weaknesses" data-route="weaknesses" title="Knowledge gaps"><svg class="icon" width="20" height="20" aria-hidden="true"><use href="#i-target"/></svg><span class="nav-label">Knowledge gaps</span></a>
+        <a class="nav-link" href="#/mistakes" data-route="mistakes" title="Mistake review"><svg class="icon" width="20" height="20" aria-hidden="true"><use href="#i-mistake"/></svg><span class="nav-label">Mistake review</span></a>
+        <a class="nav-link" href="#/recommend" data-route="recommend" title="Recommendations"><svg class="icon" width="20" height="20" aria-hidden="true"><use href="#i-bulb"/></svg><span class="nav-label">Recommendations</span></a>
+      </nav>
+ 
+      <div class="sidebar-foot">
+        <button type="button" class="nav-link nav-collapse" id="sidebar-toggle" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar">
+          <svg class="icon collapse-icon" width="20" height="20" aria-hidden="true"><use href="#i-chevrons-left"/></svg>
+          <span class="nav-label">Collapse</span>
+        </button>
+      </div>
+    </aside>
+    <div class="scrim" id="scrim" aria-hidden="true"></div>
+ 
+    <div class="main-col">
+      <header class="topbar">
+        <button type="button" class="icon-btn menu-btn" id="menu-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar">
+          <svg class="icon" width="22" height="22" aria-hidden="true"><use href="#i-menu"/></svg>
+        </button>
+ 
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li>StudyPath</li>
+            <li aria-current="page" id="crumb-current">Overview</li>
+          </ol>
+        </nav>
+ 
+        <div class="topbar-actions">
+          <button type="button" class="icon-btn" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme">
+            <svg class="icon icon-sun" width="20" height="20" aria-hidden="true"><use href="#i-sun"/></svg>
+            <svg class="icon icon-moon" width="20" height="20" aria-hidden="true"><use href="#i-moon"/></svg>
+          </button>
+          <div class="user-chip">
+            <span class="avatar" id="user-avatar" aria-hidden="true">S</span>
+            <span class="user-name" id="user-name">Student</span>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" id="logout-btn">
+            <svg class="icon" width="16" height="16" aria-hidden="true"><use href="#i-logout"/></svg>
+            <span class="btn-label">Sign out</span>
+          </button>
+        </div>
+      </header>
+ 
+      <main id="main" tabindex="-1">
+        <div id="view"></div>
+      </main>
+    </div>
+  </div>
+ 
+  <div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
+ 
+  <noscript>
+    <p class="noscript">AI StudyPath needs JavaScript to run. Please enable it in your browser.</p>
+  </noscript>
+ 
+  <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</body>
+</html>
